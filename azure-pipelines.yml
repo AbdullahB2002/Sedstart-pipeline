@@ -1,6 +1,8 @@
 trigger:
   - main
 
+pr: none
+
 pool:
   vmImage: ubuntu-latest
 
@@ -22,4 +24,4 @@ steps:
                 exit 1
               }
     env:
-      SEDSTART_API_KEY: $(SEDSTART_API_KEY)  # Your Azure secret
+      SEDSTART_API_KEY: $(SEDSTART_API_KEY)  # Your Azure secret (rename if needed)
