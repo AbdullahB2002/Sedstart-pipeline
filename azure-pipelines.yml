@@ -1,15 +1,10 @@
 trigger:
-  - main                 # or your production branch
+  - main
 
 pr: none
 
 pool:
   vmImage: ubuntu-latest
-
-variables:
-  SEDSTART_PROJECT_ID: '334'
-  SEDSTART_TEST_ID:    '2093'
-  SEDSTART_PROFILE_ID: '406'
 
 steps:
   - task: Bash@3
@@ -19,15 +14,17 @@ steps:
       script: |
         echo "Triggering SedStart production run..."
 
-        curl -f -X POST "https://api.sedstart.com/v1/projects/334/tests/2093/runs" \
+        curl -f -X POST "https://app.sedstart.com/api/v1/trigger" \
           -H "Authorization: Bearer $(SEDSTART_API_KEY_PROD)" \
           -H "Content-Type: application/json" \
           -d '{
+                "project_id": "334",
+                "test_id": "2093",
                 "profile_id": "406",
                 "wait": true
-              }' && echo "SedStart run completed successfully!" || (
+              }' && echo "SedStart run completed successfully!" || {
                 echo "##[error]SedStart API call failed"
                 exit 1
-              )
+              }
     env:
       SEDSTART_API_KEY_PROD: $(SEDSTART_API_KEY_PROD)
