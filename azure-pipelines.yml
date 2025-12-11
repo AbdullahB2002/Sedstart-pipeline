@@ -1,0 +1,52 @@
+# azure-pipelines.yml
+trigger:
+  - main                # Change to your production branch if different
+  # - feature/*         # Optional: also run on feature branches
+
+pr: none                # Disable PR triggers if you don’t want them
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # You can override these in the pipeline UI if needed
+  SEDSTART_PROJECT_ID: '334'
+  SEDSTART_TEST_ID:    '2093'
+  SEDSTART_PROFILE_ID: '406'
+
+steps:
+  - task: Bash@3
+    name: Trigger_SedStart_Production_Run
+    displayName: 'Trigger SedStart Production Test Run'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "Triggering SedStart test run..."
+        echo "Project ID: $(SEDSTART_PROJECT_ID)"
+        echo "Test ID:    $(SEDSTART_TEST_ID)"
+        echo "Profile ID: $(SEDSTART_PROFILE_ID)"
+
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+          https://api.sedstart.com/v1/projects/$(SEDSTART_PROJECT_ID)/tests/$(SEDSTART_TEST_ID)/runs \
+          -H "Authorization: Bearer $(SEDSTART_API_KEY_PROD)" \
+          -H "Content-Type: application/json" \
+          -d '{
+                "profile_id": "$(SEDSTART_PROFILE_ID)",
+                "wait": true
+              }')
+
+        HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
+        HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+
+        echo "HTTP Status: $HTTP_CODE"
+        echo "Response body:"
+        echo "$HTTP_BODY"
+
+        if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
+          echo "##[error] SedStart API call failed with status $HTTP_CODE"
+          exit 1
+        fi
+
+        echo "SedStart run triggered and completed successfully!"
+    env:
+      SEDSTART_API_KEY_PROD: $(SEDSTART_API_KEY_PROD)   # This pulls the secret
