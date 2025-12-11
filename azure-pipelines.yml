@@ -1,8 +1,6 @@
 trigger:
   - main
 
-pr: none
-
 pool:
   vmImage: ubuntu-latest
 
@@ -12,19 +10,16 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo "Triggering SedStart production run..."
-
-        curl -f -X POST "https://app.sedstart.com/api/v1/trigger" \
-          -H "Authorization: Bearer $(SEDSTART_API_KEY_PROD)" \
+        echo "Triggering SedStart prod tests..."
+        curl -f -X POST "https://app.sedstart.com/api/run" \
           -H "Content-Type: application/json" \
+          -H "x-api-key: $(SEDSTART_API_KEY)" \
           -d '{
-                "project_id": "334",
-                "test_id": "2093",
-                "profile_id": "406",
-                "wait": true
-              }' && echo "SedStart run completed successfully!" || {
-                echo "##[error]SedStart API call failed"
+                "project": "sample",
+                "environment": "prod"
+              }' && echo "SedStart tests completed successfully!" || {
+                echo "##[error] SedStart API failed"
                 exit 1
               }
     env:
-      SEDSTART_API_KEY_PROD: $(SEDSTART_API_KEY_PROD)
+      SEDSTART_API_KEY: $(SEDSTART_API_KEY)  # Your Azure secret
